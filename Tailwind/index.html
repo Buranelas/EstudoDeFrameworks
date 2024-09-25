@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Tarefas e Hábitos - Tailwind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 py-10">
+    <div class="container mx-auto max-w-4xl bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-center mb-8">Gerenciador de Tarefas e Hábitos</h1>
+
+        <!-- Seção de Tarefas -->
+        <h2 class="text-xl mb-4">Adicionar Tarefas</h2>
+        <form id="taskForm" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <input type="text" id="taskInput" class="col-span-2 p-2 border rounded-lg" placeholder="Nome da tarefa" required>
+            <input type="date" id="taskDate" class="p-2 border rounded-lg" required>
+            <button type="submit" class="col-span-1 bg-blue-500 text-white py-2 rounded-lg">Adicionar Tarefa</button>
+        </form>
+
+        <!-- Tabela de Tarefas -->
+        <table class="table-auto w-full text-left mb-8">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-4">Tarefa</th>
+                    <th class="p-4">Data</th>
+                    <th class="p-4">Concluída</th>
+                    <th class="p-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <!-- Seção de Hábitos -->
+        <h2 class="text-xl mb-4">Adicionar Hábitos</h2>
+        <form id="habitForm" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <input type="text" id="habitInput" class="col-span-2 p-2 border rounded-lg" placeholder="Nome do hábito" required>
+            <input type="date" id="habitDate" class="p-2 border rounded-lg" required>
+            <button type="submit" class="col-span-1 bg-green-500 text-white py-2 rounded-lg">Adicionar Hábito</button>
+        </form>
+
+        <!-- Tabela de Hábitos -->
+        <table class="table-auto w-full text-left">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-4">Hábito</th>
+                    <th class="p-4">Data</th>
+                    <th class="p-4">Dom</th>
+                    <th class="p-4">Seg</th>
+                    <th class="p-4">Ter</th>
+                    <th class="p-4">Qua</th>
+                    <th class="p-4">Qui</th>
+                    <th class="p-4">Sex</th>
+                    <th class="p-4">Sáb</th>
+                    <th class="p-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para carregar dados do localStorage
+        function loadFromStorage(key) {
+            return JSON.parse(localStorage.getItem(key)) || [];
+        }
+
+        // Função para salvar dados no localStorage
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        let tasks = loadFromStorage('tasks');
+        let habits = loadFromStorage('habits');
+
+        const taskForm = document.getElementById('taskForm');
+        const taskTableBody = document.querySelector('table tbody');
+        const habitForm = document.getElementById('habitForm');
+        const habitTableBody = document.querySelectorAll('table tbody')[1];
+
+        // Função para renderizar tarefas na tabela
+        function renderTasks() {
+            taskTableBody.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-4">${task.name}</td>
+                    <td class="p-4">${task.date}</td>
+                    <td class="p-4"><input type="checkbox" ${task.completed ? 'checked' : ''}></td>
+                    <td class="p-4">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded-lg edit-task" data-index="${index}">Editar</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded-lg delete-task" data-index="${index}">Excluir</button>
+                    </td>
+                `;
+                taskTableBody.appendChild(row);
+            });
+        }
+
+        // Função para renderizar hábitos na tabela
+        function renderHabits() {
+            habitTableBody.innerHTML = '';
+            habits.forEach((habit, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-4">${habit.name}</td>
+                    <td class="p-4">${habit.date}</td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[0] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[1] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[2] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[3] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[4] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[5] ? 'checked' : ''}></td>
+                    <td class="p-4"><input type="checkbox" ${habit.days[6] ? 'checked' : ''}></td>
+                    <td class="p-4">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded-lg edit-habit" data-index="${index}">Editar</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded-lg delete-habit" data-index="${index}">Excluir</button>
+                    </td>
+                `;
+                habitTableBody.appendChild(row);
+            });
+        }
+
+        // Adicionar nova tarefa
+        taskForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const taskName = document.getElementById('taskInput').value;
+            const taskDate = document.getElementById('taskDate').value;
+
+            const task = { name: taskName, date: taskDate, completed: false };
+            tasks.push(task);
+            saveToStorage('tasks', tasks);
+            renderTasks();
+            taskForm.reset();
+        });
+
+        // Adicionar novo hábito
+        habitForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const habitName = document.getElementById('habitInput').value;
+            const habitDate = document.getElementById('habitDate').value;
+
+            const habit = { name: habitName, date: habitDate, days: [false, false, false, false, false, false, false] };
+            habits.push(habit);
+            saveToStorage('habits', habits);
+            renderHabits();
+            habitForm.reset();
+        });
+
+        // Editar ou excluir tarefas
+        taskTableBody.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-task')) {
+                const index = event.target.dataset.index;
+                tasks.splice(index, 1);
+                saveToStorage('tasks', tasks);
+                renderTasks();
+            }
+
+            if (event.target.classList.contains('edit-task')) {
+                const index = event.target.dataset.index;
+                const task = tasks[index];
+                document.getElementById('taskInput').value = task.name;
+                document.getElementById('taskDate').value = task.date;
+                tasks.splice(index, 1);  // Remove the task temporarily for editing
+                saveToStorage('tasks', tasks);
+                renderTasks();
+            }
+        });
+
+        // Editar ou excluir hábitos
+        habitTableBody.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-habit')) {
+                const index = event.target.dataset.index;
+                habits.splice(index, 1);
+                saveToStorage('habits', habits);
+                renderHabits();
+            }
+
+            if (event.target.classList.contains('edit-habit')) {
+                const index = event.target.dataset.index;
+                const habit = habits[index];
+                document.getElementById('habitInput').value = habit.name;
+                document.getElementById('habitDate').value = habit.date;
+                habits.splice(index, 1);  // Remove the habit temporarily for editing
+                saveToStorage('habits', habits);
+                renderHabits();
+            }
+        });
+
+        // Inicializar a renderização dos dados salvos
+        renderTasks();
+        renderHabits();
+    </script>
+</body>
+</html>
